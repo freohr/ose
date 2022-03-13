@@ -2,7 +2,8 @@ import { OsePartyXP } from "./party-xp.js";
 import { OseParty } from "./party.js";
 
 const Party = {
-  partySheet: void 0
+  partySheet: void 0,
+  xpDialog: void 0
 };
 
 export class OsePartySheet extends FormApplication {
@@ -21,14 +22,24 @@ export class OsePartySheet extends FormApplication {
 
   static init() {
     Party.partySheet = new OsePartySheet();
+    Party.xpDialog = new OsePartyXP(Party.partySheet.object, {});
   }
 
   static showPartySheet(options = {}) {
     OsePartySheet.partySheet.render(true, { focus: true, ...options });
   }
 
+  static dealXP(amount = 0, options = {}) {
+    OsePartySheet.xpDialog.initialXPAmount = amount;
+    OsePartySheet.xpDialog.render(true, { ...options });
+  }
+
   static get partySheet() {
     return Party.partySheet;
+  }
+
+  static get xpDialog() {
+    return Party.xpDialog;
   }
 
   /* -------------------------------------------- */

@@ -1,6 +1,11 @@
 import { OseParty } from "./party.js";
 
 export class OsePartyXP extends FormApplication {
+
+  constructor(...args) {
+    super(...args);
+  }
+
   static get defaultOptions() {
     return foundry.utils.mergeObject(super.defaultOptions, {
       classes: ["ose", "dialog", "party-xp"],
@@ -8,9 +13,12 @@ export class OsePartyXP extends FormApplication {
       width: 300,
       height: "auto",
       resizable: false,
-      closeOnSubmit: true
+      closeOnSubmit: true,
+      focus: true
     });
   }
+
+  initialXPAmount = 0;
 
   /* -------------------------------------------- */
 
@@ -29,12 +37,13 @@ export class OsePartyXP extends FormApplication {
    * @return {Object}
    */
   getData() {
-    let data = {
+    const data = {
       actors: OseParty.currentParty,
-      data: this.object,
+      // data: this.object,
       config: CONFIG.OSE,
       user: game.user,
       settings: settings,
+      initialXP: this.initialXPAmount
     };
     return data;
   }

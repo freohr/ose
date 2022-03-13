@@ -168,3 +168,4 @@ Hooks.on("renderCompendium", renderList.RenderCompendium);
 Hooks.on("renderSidebarDirectory", renderList.RenderDirectory);
 
 Hooks.on("OSE.Party.showSheet", OsePartySheet.showPartySheet);
+Hooks.on("OSE.Party.dealXp", OsePartySheet.dealXP);
