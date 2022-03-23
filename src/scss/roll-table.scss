@@ -1,0 +1,31 @@
+.system-ose .ose-treasure-table {
+.table-results .table-result {
+
+    &.table-header > .result-values {
+        text-align: center;
+    }
+
+    .hidden {
+        display: none;
+    }
+
+    .result-details {
+        flex: 2;
+    }
+
+    .result-values {
+        & > * {
+            flex: 1;
+            margin-right: 5px;
+        }
+
+        .result-range input {
+            width: 42%;
+        }
+
+        input {
+            text-align: center;
+        }
+    }
+}
+}

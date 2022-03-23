@@ -48,6 +48,8 @@
   "OSE.roll.individualInit": "{name} rolls for Initiative!",
   "OSE.roll.individualInitGroup": "Initiative Rolls",
 
+  "OSE.table.treasure.title": "Treasure Table Configuration",
+  "OSE.table.treasure.chance": "Chance (%)",
   "OSE.table.treasure.roll": "Roll Treasure",
 
   "OSE.details.name": "Name",

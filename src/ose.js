@@ -17,6 +17,9 @@ import { OseCombat } from "./module/combat.js";
 import * as renderList from "./module/renderList.js";
 import { OsePartySheet } from "./module/party/party-sheet.js";
 
+import { OseRollTable } from "./module/item/roll-table.js";
+import { OseRollTableConfig } from "./module/item/roll-table-sheet.js";
+
 /* -------------------------------------------- */
 /*  Foundry VTT Initialization                  */
 /* -------------------------------------------- */
@@ -52,6 +55,7 @@ Hooks.once("init", async function () {
 
   CONFIG.Actor.documentClass = OseActor;
   CONFIG.Item.documentClass = OseItem;
+  CONFIG.RollTable.documentClass = OseRollTable;
 
   // Register sheet application classes
   Actors.unregisterSheet("core", ActorSheet);
@@ -70,6 +74,12 @@ Hooks.once("init", async function () {
   Items.registerSheet("ose", OseItemSheet, {
     makeDefault: true,
     label: "OSE.SheetClassItem",
+  });
+
+  RollTables.unregisterSheet("core", RollTableConfig);
+  RollTables.registerSheet("ose", OseRollTableConfig, {
+    makeDefault: true,
+    label: "OSE.TreasureTable"
   });
 
   await preloadHandlebarsTemplates();
@@ -153,15 +163,11 @@ Hooks.on("preCreateCombatant", (combat, data, options, id) => {
 Hooks.on("updateCombatant", OseCombat.debounce(OseCombat.updateCombatant), 100);
 Hooks.on("renderCombatTracker", OseCombat.debounce(OseCombat.format, 100));
 Hooks.on("preUpdateCombat", OseCombat.preUpdateCombat);
-Hooks.on(
-  "getCombatTrackerEntryContext",
-  OseCombat.debounce(OseCombat.addContextEntry, 100)
-);
+Hooks.on("getCombatTrackerEntryContext", OseCombat.debounce(OseCombat.addContextEntry, 100));
 
 Hooks.on("renderChatLog", (app, html, data) => OseItem.chatListeners(html));
 Hooks.on("getChatLogEntryContext", chat.addChatMessageContextOptions);
 Hooks.on("renderChatMessage", chat.addChatMessageButtons);
-Hooks.on("renderRollTableConfig", treasure.augmentTable);
 Hooks.on("updateActor", party.update);
 
 Hooks.on("renderCompendium", renderList.RenderCompendium);
