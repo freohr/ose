@@ -13,7 +13,16 @@ export class OseRollTable extends RollTable {
     return isTreasureTable;
   }
 
-  async _rollTreasure({ roll, recursive = true, _depth = 0 }) {
+  async roll({roll, recursive=true, _depth=0}={}) {
+
+    if (this.isTreasureTable) {
+      return this._rollTreasure({roll, recursive, _depth});
+    } else {
+      return super.roll({roll, recursive, _depth});
+    }
+  }
+
+  async _rollTreasure({roll, recursive=true, _depth=0}={}) {
 
     // Prevent excessive recursion
     if (_depth > 5) {

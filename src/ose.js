@@ -10,15 +10,14 @@ import { registerSettings } from "./module/settings.js";
 import { registerHelpers } from "./module/helpers.js";
 import { registerFVTTModuleAPIs } from "./module/fvttModuleAPIs.js";
 import * as chat from "./module/chat.js";
-import * as treasure from "./module/treasure.js";
 import * as macros from "./module/macros.js";
 import * as party from "./module/party.js";
 import { OseCombat } from "./module/combat.js";
 import * as renderList from "./module/renderList.js";
 import { OsePartySheet } from "./module/party/party-sheet.js";
 
-import { OseRollTable } from "./module/item/roll-table.js";
-import { OseRollTableConfig } from "./module/item/roll-table-sheet.js";
+import { OseRollTable } from "./module/treasure-table/treasure-roll-table.js";
+import { OseRollTableConfig } from "./module/treasure-table/treasure-roll-table-sheet.js";
 
 /* -------------------------------------------- */
 /*  Foundry VTT Initialization                  */
