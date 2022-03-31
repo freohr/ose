@@ -13,16 +13,28 @@ export class OseRollTable extends RollTable {
     return isTreasureTable;
   }
 
-  async roll({roll, recursive=true, _depth=0}={}) {
+  async getResultsForRoll() {
 
+  }
+
+  /**
+   * @param {roll: Roll, recursive: bool, _depth: int} Object: unpacking Roll object + Recursive flag + current recursion depth
+   * @returns {rolls: Roll[], results: TableResult[]} Object: to unpack, contains the rolls from this table (single roll in case of a standard table, 1 roll/result for a treasure table), and the results obtained by the roll
+   */
+  async roll({ roll, recursive = true, _depth = 0 } = {}) {
     if (this.isTreasureTable) {
-      return this._rollTreasure({roll, recursive, _depth});
+      return this.rollTreasure({ roll, recursive, _depth });
     } else {
-      return super.roll({roll, recursive, _depth});
+      return super.roll({ roll, recursive, _depth });
     }
   }
 
-  async _rollTreasure({roll, recursive=true, _depth=0}={}) {
+  /**
+   * Roll overload for Old School Treasure tables
+   * @param {roll: Roll, recursive: bool, _depth: int} Object: unpacking Roll object + Recursive flag + current recursion depth
+   * @returns {rolls: Roll[], results: TableResult[]}
+   */
+  async rollTreasure({ roll, recursive = true, _depth = 0 } = {}) {
 
     // Prevent excessive recursion
     if (_depth > 5) {
@@ -30,67 +42,105 @@ export class OseRollTable extends RollTable {
     }
 
     // Creating a d% roll to draw the treasure results
-    roll = roll instanceof Roll ? roll : Roll.create("1d100");
-    let results = [];
+    roll = Roll.create("1d100");
 
     // Ensure that at least one non-drawn result remains
     const available = this.data.results.filter(r => !r.data.drawn);
     if (!this.data.formula || !available.length) {
       ui.notifications.warn("There are no available results which can be drawn from this table.");
-      return { roll, results };
+      return { rolls: [roll], results };
     }
 
-    // Ensure that results are available within the minimum/maximum range
-    const minRoll = (await roll.reroll({ minimize: true, async: true })).total;
-    const maxRoll = (await roll.reroll({ maximize: true, async: true })).total;
-    const availableRange = available.reduce((range, result) => {
-      const r = result.data.range;
-      if (!range[0] || (r[0] < range[0])) range[0] = r[0];
-      if (!range[1] || (r[1] > range[1])) range[1] = r[1];
-      return range;
-    }, [null, null]);
-    if ((availableRange[0] > maxRoll) || (availableRange[1] < minRoll)) {
-      ui.notifications.warn("No results can possibly be drawn from this table and formula.");
-      return { roll, results };
-    }
+    // Iterate over each TableResult to check if it appears in the Treasure pile
+    let rolls = [], results = [];
 
-    // Continue rolling until one or more results are recovered
-    let iter = 0;
-    while (!results.length) {
-      if (iter >= 10000) {
-        ui.notifications.error(`Failed to draw an available entry from Table ${this.name}, maximum iteration reached`);
-        break;
+    available.forEach(result => {
+      const localRoll = roll.reroll({ async: false });
+
+      rolls.push(localRoll);
+
+      if (localRoll.total <= result.data.weight) {
+        results.push(result);
       }
-      roll = await roll.reroll({ async: true });
-      results = this.getResultsForRoll(roll.total);
-      iter++;
-    }
+    });
 
     // Draw results recursively from any inner Roll Tables
     if (recursive) {
       let inner = [];
-      for (let result of results) {
-        let pack;
-        let documentName;
-        if (result.data.type === CONST.TABLE_RESULT_TYPES.DOCUMENT) documentName = result.data.collection;
-        else if (result.data.type === CONST.TABLE_RESULT_TYPES.COMPENDIUM) {
-          pack = game.packs.get(result.data.collection);
-          documentName = pack?.documentName;
+
+      const getInnerTableData = (result) => {
+        switch (result.data.type) {
+          case CONST.TABLE_RESULT_TYPES.DOCUMENT:
+            return [null, result.data.collection];
+          case CONST.TABLE_RESULT_TYPES.COMPENDIUM:
+            const pack = game.packs.get(result.data.collection);
+            return [pack, pack?.documentName];
+          default:
+            return [null, null];
         }
+      };
+
+      for (let result of results) {
+
+        const [pack, documentName] = getInnerTableData(result);
+
         if (documentName === "RollTable") {
           const id = result.data.resultId;
           const innerTable = pack ? await pack.getDocument(id) : game.tables.get(id);
+
           if (innerTable) {
-            const innerRoll = await innerTable.roll({ _depth: _depth + 1 });
-            inner = inner.concat(innerRoll.results);
+            const { _, innerResults } = await innerTable.roll({ _depth: _depth + 1 });
+            inner = inner.concat(innerResults);
           }
+        } else {
+          inner.push(result)
         }
-        else inner.push(result);
       }
       results = inner;
     }
 
     // Return the Roll and the results
-    return { roll, results }
+    return { rolls: rolls, results }
+  }
+
+  /**
+   * Get an Array of valid results for a given rolled total
+   * @param {number} value    The rolled value
+   * @return {TableResult[]}  An Array of results
+   */
+  _getResultsForRoll(value) {
+    return this.results.filter(r => !r.data.drawn && Number.between(value, ...r.data.range));
+  }
+
+  /**
+   * Get an Array of valid results for a given rolled total
+   * @param {number|number[]} value: The rolled value or values in the case of a treasure table
+   * @return {TableResult[]}  An Array of results
+   */
+  getResultsForRoll(value) {
+    if (this.isTreasureTable) {
+      return getTreasuresForRoll(value);
+    } else {
+      return super.getResultsForRoll(value);
+    }
+  }
+
+  getTreasuresForRoll(rolls) {
+    if (!Array.isArray(rolls)) {
+      // If a treasure table if treated as a normal table, it's less error-prone to return nothing than try to shoehorn the base table logic in the treasure table expected data-model
+      return [];
+    }
+
+    if (rolls.length > this.results.length) {
+      // In case we get more rolls than we have results in this Table, discard any excess to avoid errors
+      values = values.slice(this.results.length);
+    }
+
+    const resultItr = this.results[Symbol.iterator]();
+    const zippedResults = rolls.map(roll => { return { roll: roll, result: resultItr.next().value }; });
+
+    return zippedResults
+      .filter(zipResult => (!zipResult.result.data.drawn && zipResult.roll.total <= zipResult.result.data.weight))
+      .map(zipResult => zipResult.result);
   }
 }

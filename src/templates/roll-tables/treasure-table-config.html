@@ -48,16 +48,21 @@
                 </div>
 
                 <div class="result-values flexrow">
-                    <div class="result-chance {{#unless isTreasureTable}}hidden{{/unless}}">
+                    {{#if isTreasureTable}}
+                    <div class="result-chance">
                         <label>{{ localize "OSE.table.treasure.chance" }}</label>
                     </div>
-
-                    <div class="result-weight {{#if isTreasureTable}}hidden{{/if}}">
+                    {{else}}
+                    <div class="result-weight">
                         <label>{{ localize "TABLE.ResultWeight" }}</label>
                     </div>
-                    <div class="result-range {{#if isTreasureTable}}hidden{{/if}}">
+                    {{/if}}
+
+                    {{#unless isTreasureTable}}
+                    <div class="result-range">
                         <label>{{ localize "TABLE.ResultRange" }}</label>
                     </div>
+                    {{/unless}}
                 </div>
 
                 <!-- Toggle this if we're using Treasure Tables -->
@@ -119,12 +124,7 @@
                 </div>
 
                 <div class="result-values flexrow">
-                    <div class="result-chance {{#unless ../isTreasureTable}}hidden{{/unless}}">
-                        <input type="number" name="results.{{i}}.chance" value="{{results.chance}}" placeholder="1"
-                            data-dtype="Number" />
-                    </div>
-
-                    <div class="result-weight {{#if ../isTreasureTable}}hidden{{/if}}">
+                    <div class="result-weight">
                         <input type="number" name="results.{{i}}.weight" value="{{result.weight}}" placeholder="1"
                             data-dtype="Number" />
                     </div>
